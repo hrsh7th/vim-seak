@@ -83,7 +83,7 @@ if has('nvim')
   let s:ns = nvim_create_namespace('seak')
 else
   let s:text_prop_id = 0
-  call prop_type_add('seak', { 'highlight': 'ErrorMsg' })
+  call prop_type_add('seak', {})
 endif
 function! s:open(lnum, col, mark) abort
   if has('nvim')
