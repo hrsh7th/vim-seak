@@ -57,7 +57,7 @@ function Seak:on_change()
         vim.api.nvim_buf_set_extmark(0, ns, m.row, m.s, {
           end_line = m.row,
           end_col = m.e,
-          virt_text = { { marks[i], 'ErrorMsg' } },
+          virt_text = { { marks[i], 'MatchParen' } },
           virt_text_pos = 'overlay',
         })
       end
@@ -74,16 +74,18 @@ function Seak:select()
   local index = marks[vim.fn.nr2char(vim.fn.getchar())]
   if index then
     local match = self.matches[index]
-    vim.api.nvim_feedkeys(
-      vim.api.nvim_replace_termcodes(
-        string.format('<Esc><Cmd>call cursor(%s, %s)<CR>', match.row + 1, match.s + 1),
-        true,
-        true,
+    if match then
+      vim.api.nvim_feedkeys(
+        vim.api.nvim_replace_termcodes(
+          string.format('<Esc><Cmd>call cursor(%s, %s)<CR>', match.row + 1, match.s + 1),
+          true,
+          true,
+          true
+        ),
+        'n',
         true
-      ),
-      'n',
-      true
-    )
+      )
+    end
   end
   self:clear()
 end
