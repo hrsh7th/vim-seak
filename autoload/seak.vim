@@ -41,9 +41,7 @@ function! seak#on_change() abort
       let l:match.id = s:open(l:match.lnum, l:match.col, l:match.mark)
     endfor
     let s:state.matches = l:matches
-    if !has('nvim')
-      redraw
-    endif
+    redraw
   catch /.*/
     echomsg string({ 'exception': v:exception, 'throwpoint': v:throwpoint })
   endtry
