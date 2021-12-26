@@ -57,7 +57,7 @@ function Seak:on_change()
         vim.api.nvim_buf_set_extmark(0, ns, m.row, m.s, {
           end_line = m.row,
           end_col = m.e,
-          virt_text = { { marks[i], 'MatchParen' } },
+          virt_text = { { marks[i], 'ErrorMsg' } },
           virt_text_pos = 'overlay',
         })
       end
