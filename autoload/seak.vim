@@ -64,7 +64,8 @@ function! seak#clear() abort
   let s:state.matches = []
 endfunction
 
-function! seak#select() abort
+function! seak#select(...) abort
+  let l:opts = get(a:000, 0, {})
   if empty(s:state.matches)
     return
   endif
@@ -73,7 +74,10 @@ function! seak#select() abort
     let l:match = get(s:state.matches, l:index, v:null)
     if !empty(l:match)
       let l:match = s:state.matches[l:index]
-      call feedkeys(printf("\<Esc>\<Cmd>call cursor(%s, %s)\<CR>", l:match.lnum, l:match.col), 'n')
+      if get(l:opts, 'nohlsearch', v:false)
+        call feedkeys("\<Cmd>nohlsearch\<CR>", 'ni')
+      endif
+      call feedkeys(printf("\<Esc>\<Cmd>call cursor(%s, %s)\<CR>", l:match.lnum, l:match.col), 'ni')
     endif
   end
   call seak#clear()
@@ -90,7 +94,7 @@ function! s:open(lnum, col, mark) abort
     return nvim_buf_set_extmark(0, s:ns, a:lnum - 1, a:col - 1, {
     \   'end_line': a:lnum - 1,
     \   'end_col': a:col - 1,
-    \   'virt_text': [[a:mark, 'ErrorMsg']],
+    \   'virt_text': [[a:mark, 'SeakChar']],
     \   'virt_text_pos': 'overlay'
     \ })
   else
@@ -102,7 +106,7 @@ function! s:open(lnum, col, mark) abort
     \   'textpropid': s:text_prop_id,
     \   'width': 1,
     \   'height': 1,
-    \   'highlight': 'ErrorMsg'
+    \   'highlight': 'SeakChar'
     \ })
     return s:text_prop_id
   endif

@@ -5,7 +5,8 @@ I welcome your comments, but please refrain from using them normally.
 
 
 ```vim
+highlight link SeakChar Visual
 let g:seak_enabled = v:true
-cmap <C-j> <Plug>(seak-select)
+cnoremap <C-j> <Cmd>call seak#select({ 'nohlsearch': v:true })<CR>
 ```
 
