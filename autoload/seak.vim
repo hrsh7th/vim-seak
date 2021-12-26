@@ -65,6 +65,9 @@ function! seak#clear() abort
 endfunction
 
 function! seak#select() abort
+  if empty(s:state.matches)
+    return
+  endif
   let l:index = index(s:marks, nr2char(getchar()))
   if l:index >= 0
     let l:match = get(s:state.matches, l:index, v:null)
