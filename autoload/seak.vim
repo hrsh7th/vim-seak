@@ -1,4 +1,5 @@
 let s:state = {
+\   'bufnr': 0,
 \   'matches': [],
 \ }
 
@@ -9,10 +10,15 @@ function! seak#on_change() abort
     return
   endif
 
+  if s:state.bufnr !=# bufnr('%')
+    call seak#clear()
+    let s:state.bufnr = bufnr('%')
+  endif
+
   let l:lnum_s = line('w0')
   let l:lnum_e = line('w$')
   let l:input = getcmdline()
-  let l:texts = getbufline('.', l:lnum_s, l:lnum_e)
+  let l:texts = getbufline('%', l:lnum_s, l:lnum_e)
   try
     let l:matches = []
     for l:i in range(0, len(l:texts) - 1)
@@ -55,6 +61,7 @@ function! seak#clear() abort
       echomsg string({ 'exception': v:exception, 'throwpoint': v:throwpoint })
     endtry
   endfor
+  let s:state.matches = []
 endfunction
 
 function! seak#select() abort
