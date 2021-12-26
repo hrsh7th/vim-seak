@@ -14,6 +14,7 @@ function! seak#on_change() abort
   let l:input = getcmdline()
   let l:texts = getbufline('.', l:lnum_s, l:lnum_e)
   try
+    call seak#clear()
     let l:matches = []
     for l:i in range(0, len(l:texts) - 1)
       let l:text = l:texts[l:i]
@@ -35,7 +36,6 @@ function! seak#on_change() abort
         let l:off = l:off + l:m[2] + 1
       endwhile
     endfor
-    call seak#clear()
     let s:state.matches = l:matches
   catch /.*/
     echomsg string({ 'exception': v:exception, 'throwpoint': v:throwpoint })
