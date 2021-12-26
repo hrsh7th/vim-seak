@@ -14,7 +14,6 @@ function! seak#on_change() abort
   let l:input = getcmdline()
   let l:texts = getbufline('.', l:lnum_s, l:lnum_e)
   try
-    call seak#clear()
     let l:matches = []
     for l:i in range(0, len(l:texts) - 1)
       let l:text = l:texts[l:i]
@@ -31,12 +30,20 @@ function! seak#on_change() abort
         call add(l:matches, {
         \   'lnum': l:lnum_s + l:i,
         \   'col': l:m[1] + 1,
-        \   'id': s:open(l:lnum_s + l:i, l:m[1] + 1, l:mark)
+        \   'mark': l:mark,
         \ })
         let l:off = l:off + l:m[2] + 1
       endwhile
     endfor
+
+    call seak#clear()
+    for l:match in l:matches
+      let l:match.id = s:open(l:match.lnum, l:match.col, l:match.mark)
+    endfor
     let s:state.matches = l:matches
+    if !has('nvim')
+      redraw
+    endif
   catch /.*/
     echomsg string({ 'exception': v:exception, 'throwpoint': v:throwpoint })
   endtry
