@@ -81,6 +81,9 @@ endfunction
 
 if has('nvim')
   let s:ns = nvim_create_namespace('seak')
+else
+  let s:text_prop_id = 0
+  call prop_type_add('seak', { 'highlight': 'ErrorMsg' })
 endif
 function! s:open(lnum, col, mark) abort
   if has('nvim')
@@ -91,14 +94,17 @@ function! s:open(lnum, col, mark) abort
     \   'virt_text_pos': 'overlay'
     \ })
   else
-    let l:pos = screenpos(0, a:lnum, a:col)
-    return popup_create(a:mark, {
-    \   'line': l:pos.row,
-    \   'col': l:pos.col,
+    let s:text_prop_id += 1
+    call prop_add(a:lnum, a:col, { 'type': 'seak', 'id': s:text_prop_id })
+    call popup_create(a:mark, {
+    \   'line': -1,
+    \   'textprop': 'seak',
+    \   'textpropid': s:text_prop_id,
     \   'width': 1,
     \   'height': 1,
     \   'highlight': 'ErrorMsg'
     \ })
+    return s:text_prop_id
   endif
 endfunction
 
@@ -106,7 +112,10 @@ function! s:close(id) abort
   if has('nvim')
     call nvim_buf_del_extmark(0, s:ns, a:id)
   else
-    call popup_close(a:id)
+    call prop_remove({
+    \   'type': 'seak',
+    \   'id': a:id,
+    \ })
   endif
 endfunction
 
