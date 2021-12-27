@@ -1,5 +1,6 @@
 let s:state = {
 \   'matches': [],
+\   'search': 0,
 \ }
 
 "
@@ -29,7 +30,7 @@ function! seak#on_change() abort
       let l:text = l:texts[l:i]
       let l:off = 0
       while l:off < strlen(l:text)
-        let l:m = matchstrpos(l:text, l:input, l:off)
+        let l:m = matchstrpos(l:text, l:input, l:off, 1)
         if l:m[0] ==# ''
           break
         endif
@@ -42,7 +43,7 @@ function! seak#on_change() abort
         \   'col': l:m[1] + 1,
         \   'mark': l:mark,
         \ })
-        let l:off = l:off + l:m[2] + 1
+        let l:off = l:m[2] + 1
       endwhile
     endfor
 
@@ -51,6 +52,7 @@ function! seak#on_change() abort
       let l:match.id = s:open(l:match.lnum, l:match.col, l:match.mark)
     endfor
     let s:state.matches = l:matches
+    let s:state.search = matchadd('Search', l:input)
     redraw
   catch /.*/
     echomsg string({ 'exception': v:exception, 'throwpoint': v:throwpoint })
@@ -69,7 +71,11 @@ function! seak#clear() abort
     endtry
   endfor
   let s:state.matches = []
-  redraw
+  try
+    call matchdelete(s:state.search)
+  catch /.*/
+  endtry
+  let s:state.search = 0
 endfunction
 
 "
@@ -94,6 +100,9 @@ function! seak#select(...) abort
   call seak#clear()
 endfunction
 
+"
+" prepare
+"
 if has('nvim')
   let s:ns = nvim_create_namespace('seak')
 else
@@ -104,15 +113,17 @@ endif
 "
 " s:open
 "
-function! s:open(lnum, col, mark) abort
-  if has('nvim')
+if has('nvim')
+  function! s:open(lnum, col, mark) abort
     return nvim_buf_set_extmark(0, s:ns, a:lnum - 1, max([0, a:col - 2]), {
     \   'end_line': a:lnum - 1,
     \   'end_col': max([0, a:col - 2]),
     \   'virt_text': [[a:mark, 'SeakChar']],
     \   'virt_text_pos': 'overlay'
     \ })
-  else
+  endfunction
+else
+  function! s:open(lnum, col, mark) abort
     let s:text_prop_id += 1
     call prop_add(a:lnum, a:col, { 'type': 'seak', 'id': s:text_prop_id })
     call popup_create(a:mark, {
@@ -125,20 +136,22 @@ function! s:open(lnum, col, mark) abort
     \   'highlight': 'SeakChar'
     \ })
     return s:text_prop_id
-  endif
-endfunction
+  endfunction
+endif
 
 "
 " s:close
 "
-function! s:close(id) abort
-  if has('nvim')
+if has('nvim')
+  function! s:close(id) abort
     call nvim_buf_del_extmark(0, s:ns, a:id)
-  else
+  endfunction
+else
+  function! s:close(id) abort
     call prop_remove({
     \   'type': 'seak',
     \   'id': a:id,
     \ })
-  endif
-endfunction
+  endfunction
+endif
 
