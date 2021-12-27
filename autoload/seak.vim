@@ -69,6 +69,7 @@ function! seak#clear() abort
     endtry
   endfor
   let s:state.matches = []
+  redraw
 endfunction
 
 "
@@ -91,7 +92,6 @@ function! seak#select(...) abort
     endif
   end
   call seak#clear()
-  redraw
 endfunction
 
 if has('nvim')
