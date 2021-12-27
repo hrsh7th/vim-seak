@@ -19,8 +19,8 @@ endif
 
 augroup seak
   autocmd!
-  autocmd CmdlineEnter,CmdwinEnter [/\?] call seak#on_enter()
-  autocmd CmdlineChanged [/\?] call timer_start(0, { -> seak#on_change() })
-  autocmd CmdlineLeave,CmdwinLeave [/\?] call seak#on_leave()
+  autocmd CmdlineEnter,CmdwinEnter [\/\?] call seak#on_enter()
+  autocmd CmdlineChanged [\/\?] call timer_start(0, { -> seak#on_change() })
+  autocmd CmdlineLeave,CmdwinLeave [\/\?] call seak#on_leave()
 augroup END
 
