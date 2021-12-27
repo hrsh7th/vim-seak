@@ -1,0 +1,79 @@
+*vim-seak* *seak*
+
+The plugin that enhances the / and ?.
+
+==============================================================================
+CONTENTS                                                         *seak-contents*
+
+Usage                                                               |seak-usage|
+Function                                                         |seak-function|
+Variable                                                         |seak-variable|
+Highlight                                                       |seak-highlight|
+
+
+==============================================================================
+Usage                                                               *seak-usage*
+
+First, You should install this plugin via your favorite plugin manager.
+The following example uses `vim-plug`.
+
+>
+  Plug 'hrsh7th/vim-seak'
+<
+
+Then you should define mapping and variables to setup |vim-seak|.
+
+>
+  let g:seak_enabled = v:true
+  cnoremap <C-j> <Cmd>call seak#select({ 'nohlsearch': v:true })<CR>
+>
+
+Now, you can jump to the suitable position during searching via / or ? via |seak#select|.
+
+
+
+==============================================================================
+Function                                                         *seak-function*
+
+                                                                   *seak#select*
+seak#select(option)~
+
+  Choose current highlighted marks to jump.
+
+  The `option` arguments is dict that can be having a following keys.
+
+    - `nohlsearch` (boolean)
+      - Specify clear the search highlight after jump to mark via |vim-seak|.
+
+
+
+==============================================================================
+Variable                                                         *seak-variable*
+
+                                                                *g:seak_enabled*
+g:seak_enabled~
+  Default: `v:false`
+
+  Enable or disable seak highlight during / or ? search.
+
+                                                                  *g:seak_marks*
+g:seak_marks~
+  Default: `['a', 's', 'd', 'f', 'h', 'j', 'k', 'l']`
+
+  Specify jump marks by array of character.
+
+
+
+==============================================================================
+Highlight                                                       *seak-highlight*
+
+                                                                   *hi-SeakChar*
+SeakChar~
+
+  Specify mark highlights.
+
+
+
+==============================================================================
+vim:tw=78:ts=4:et:ft=help:norl:
+

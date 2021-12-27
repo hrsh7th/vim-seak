@@ -1,12 +1,16 @@
-The plugin to improve / in the experimental stage.
+vim-seak
+=====
 
-I have experimented with many plugins of this type and left them alone. ([vim-aim](https://github.com/hrsh7th/vim-aim) etc)
-I welcome your comments, but please refrain from using them normally.
+The plugin that enhances the `/` and `?`.
 
+
+Usage
+=====
 
 ```vim
-highlight link SeakChar Visual
 let g:seak_enabled = v:true
 cnoremap <C-j> <Cmd>call seak#select({ 'nohlsearch': v:true })<CR>
 ```
+
+See [doc](./doc/seak.txt) for more detailed information.
 

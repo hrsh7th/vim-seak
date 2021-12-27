@@ -1,18 +1,13 @@
 let s:state = {
-\   'bufnr': 0,
 \   'matches': [],
 \ }
 
-let s:marks = split('abcdefghijklmnopqrstuvwxyz', '.\zs')
-
+"
+" seak#on_change
+"
 function! seak#on_change() abort
   if !get(g:, 'seak_enabled', v:false) || index(['/', '?'], getcmdtype()) == -1
     return
-  endif
-
-  if s:state.bufnr !=# bufnr('%')
-    call seak#clear()
-    let s:state.bufnr = bufnr('%')
   endif
 
   let l:lnum_s = line('w0')
@@ -29,7 +24,7 @@ function! seak#on_change() abort
         if l:m[0] ==# ''
           break
         endif
-        let l:mark = get(s:marks, len(l:matches), v:null)
+        let l:mark = get(g:seak_marks, len(l:matches), v:null)
         if empty(l:mark)
           break
         endif
@@ -53,6 +48,9 @@ function! seak#on_change() abort
   endtry
 endfunction
 
+"
+" seak#clear
+"
 function! seak#clear() abort
   for l:match in s:state.matches
     try
@@ -64,12 +62,15 @@ function! seak#clear() abort
   let s:state.matches = []
 endfunction
 
+"
+" seak#select
+"
 function! seak#select(...) abort
   let l:opts = get(a:000, 0, {})
   if empty(s:state.matches)
     return
   endif
-  let l:index = index(s:marks, nr2char(getchar()))
+  let l:index = index(g:seak_marks, nr2char(getchar()))
   if l:index >= 0
     let l:match = get(s:state.matches, l:index, v:null)
     if !empty(l:match)
@@ -89,6 +90,10 @@ else
   let s:text_prop_id = 0
   call prop_type_add('seak', {})
 endif
+
+"
+" s:open
+"
 function! s:open(lnum, col, mark) abort
   if has('nvim')
     return nvim_buf_set_extmark(0, s:ns, a:lnum - 1, a:col - 1, {
@@ -112,6 +117,9 @@ function! s:open(lnum, col, mark) abort
   endif
 endfunction
 
+"
+" s:close
+"
 function! s:close(id) abort
   if has('nvim')
     call nvim_buf_del_extmark(0, s:ns, a:id)
