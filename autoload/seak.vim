@@ -49,7 +49,9 @@ function! seak#on_change() abort
         \   'mark': l:mark,
         \ }
         call add(l:matches, l:match)
-        if empty(l:nextmatch) && l:match.lnum <= l:curpos[1] && l:match.col <= l:curpos[2]
+        if empty(l:nextmatch) && l:next && (l:curpos[1] == l:match.lnum || l:curpos[1] == l:match.lnum && l:curpos[2] <= l:match.col)
+          let l:nextmatch = l:match
+        elseif !l:next && l:match.lnum < l:curpos[1] || l:match.lnum == l:curpos[1] && l:match.col <= l:curpos[2]
           let l:nextmatch = l:match
         endif
         let l:off = l:m[2] + 1
@@ -61,10 +63,8 @@ function! seak#on_change() abort
       let l:match.id = s:open(l:match.lnum, l:match.col, l:match.mark)
     endfor
     let s:state.matches = l:matches
-    let s:state.search = matchadd('Search', l:input, 99)
-    if !empty(l:nextmatch)
-      let s:state.incsearch = matchaddpos('IncSearch', [[l:nextmatch.lnum, l:nextmatch.col, l:nextmatch.end_col - l:nextmatch.col]], 1000)
-    endif
+    let s:state.search = matchadd('Search', l:input)
+    let s:state.incsearch = empty(l:nextmatch) ? 0 : matchaddpos('IncSearch', [[l:nextmatch.lnum, l:nextmatch.col, l:nextmatch.end_col - l:nextmatch.col]])
     redraw
   catch /.*/
     echomsg string({ 'exception': v:exception, 'throwpoint': v:throwpoint })
