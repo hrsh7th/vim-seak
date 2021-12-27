@@ -56,6 +56,18 @@ g:seak_enabled~
 
   Enable or disable seak highlight during / or ? search.
 
+                                                            *g:seak_auto_accept*
+g:seak_auto_accept~
+  Default: `v:false`
+
+  Specify `auto accept` or not.
+  This option is useful to achive sticky marks.
+
+>
+    let g:seak_marks = split('ABCDEFGHIJKLMNOPQRSTUVWXYZ', '.\zs')
+    let g:seak_auto_accept = v:true
+<
+
                                                                   *g:seak_marks*
 g:seak_marks~
   Default: `['a', 's', 'd', 'f', 'h', 'j', 'k', 'l']`

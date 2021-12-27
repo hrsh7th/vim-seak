@@ -12,8 +12,17 @@ function! seak#on_change() abort
 
   let l:lnum_s = line('w0')
   let l:lnum_e = line('w$')
-  let l:input = getcmdline()
   let l:texts = getbufline('%', l:lnum_s, l:lnum_e)
+  let l:input = getcmdline()
+
+  if get(g:, 'seak_auto_accept', v:true)
+    let l:mark = l:input[strlen(l:input) - 1]
+    if index(g:seak_marks, l:mark) >= 0
+      call seak#select({ 'nohlsearch': v:true, 'mark': l:mark })
+      return
+    endif
+  endif
+
   try
     let l:matches = []
     for l:i in range(0, len(l:texts) - 1)
@@ -70,15 +79,15 @@ function! seak#select(...) abort
   if empty(s:state.matches)
     return
   endif
-  let l:index = index(g:seak_marks, nr2char(getchar()))
+  let l:index = index(g:seak_marks, has_key(l:opts, 'mark') ? l:opts.mark : nr2char(getchar()))
   if l:index >= 0
     let l:match = get(s:state.matches, l:index, v:null)
     if !empty(l:match)
       let l:match = s:state.matches[l:index]
-      if get(l:opts, 'nohlsearch', v:false)
-        call feedkeys("\<Cmd>nohlsearch\<CR>", 'ni')
-      endif
-      call feedkeys(printf("\<Esc>\<Cmd>call cursor(%s, %s)\<CR>", l:match.lnum, l:match.col), 'ni')
+      let l:keys = ''
+      let l:keys .= printf("\<Esc>\<Cmd>call cursor(%s, %s)\<CR>", l:match.lnum, l:match.col)
+      let l:keys .= get(l:opts, 'nohlsearch', v:false) ? "\<Cmd>nohlsearch\<CR>" : ''
+      call feedkeys(l:keys, 'nit')
     endif
   end
   call seak#clear()
