@@ -18,7 +18,7 @@ endif
 
 augroup seak
   autocmd!
-  autocmd CmdlineChanged * call seak#on_change()
-  autocmd CmdlineLeave * call seak#clear()
+  autocmd CmdlineChanged [/\?] call seak#on_change()
+  autocmd CmdlineLeave [/\?] call seak#clear()
 augroup END
 
