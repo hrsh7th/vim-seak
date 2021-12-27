@@ -8,6 +8,14 @@ let s:state = {
 " seak#on_enter
 "
 function! seak#on_enter() abort
+  if s:is_in_cmdwin()
+    augroup seak-cmdwin
+      autocmd!
+      autocmd TextChanged,TextChangedI,TextChangedP <buffer>
+      \   call timer_start(0, { -> seak#on_change() })
+    augroup END
+  endif
+
   call seak#on_change()
 endfunction
 
@@ -22,16 +30,17 @@ endfunction
 " seak#on_change
 "
 function! seak#on_change() abort
-  if !get(g:, 'seak_enabled', v:false) || index(['/', '?'], getcmdtype()) == -1
+  if !get(g:, 'seak_enabled', v:false) || index(['/', '?'], s:getcmdtype()) == -1
     return
   endif
 
-  let l:lnum_s = line('w0')
-  let l:lnum_e = line('w$')
-  let l:texts = getbufline('%', l:lnum_s, l:lnum_e)
-  let l:input = getcmdline()
-  let l:curpos = getcurpos()
-  let l:next = getcmdtype() ==# '/'
+  let l:winID = s:get_current_winID()
+  let l:lnum_s = line('w0', l:winID)
+  let l:lnum_e = line('w$', l:winID)
+  let l:texts = s:get_current_bufline(l:lnum_s, l:lnum_e)
+  let l:input = s:getcmdline()
+  let l:curpos = s:getcurpos_on_current_window()
+  let l:next = s:getcmdtype() ==# '/'
 
   if !empty(get(g:, 'seak_auto_accept', v:true))
     let l:mark = l:input[strlen(l:input) - 1]
@@ -42,6 +51,7 @@ function! seak#on_change() abort
       endif
       let l:option = deepcopy(l:option)
       let l:option.mark = l:mark
+      let l:option._on_auto_accept = v:true
       call seak#select(l:option)
       return
     endif
@@ -83,8 +93,8 @@ function! seak#on_change() abort
       let l:match.id = s:open(l:match.lnum, l:match.col, l:match.mark)
     endfor
     let s:state.matches = l:matches
-    let s:state.search = matchadd('Search', l:input)
-    let s:state.incsearch = empty(l:nextmatch) ? 0 : matchaddpos('IncSearch', [[l:nextmatch.lnum, l:nextmatch.col, l:nextmatch.end_col - l:nextmatch.col]])
+    let s:state.search = matchadd('Search', l:input, 10, -1, { 'window': l:winID })
+    let s:state.incsearch = empty(l:nextmatch) ? 0 : matchaddpos('IncSearch', [[l:nextmatch.lnum, l:nextmatch.col, l:nextmatch.end_col - l:nextmatch.col]], 10, -1, { 'window': l:winID })
 
     redraw
   catch /.*/
@@ -96,6 +106,7 @@ endfunction
 " seak#clear
 "
 function! seak#clear() abort
+  let l:winID = s:get_current_winID()
   for l:match in s:state.matches
     try
       call s:close(l:match.id)
@@ -107,14 +118,14 @@ function! seak#clear() abort
 
   " search
   try
-    call matchdelete(s:state.search)
+    call matchdelete(s:state.search, l:winID)
   catch /.*/
   endtry
   let s:state.search = 0
 
   " incsearch
   try
-    call matchdelete(s:state.incsearch)
+    call matchdelete(s:state.incsearch, l:winID)
   catch /.*/
   endtry
   let s:state.incsearch = 0
@@ -136,12 +147,32 @@ function! seak#select(...) abort
         normal! m'
       endif
       let l:match = s:state.matches[l:index]
+
+      let l:exit_key = "\<ESC>"
+      if s:is_in_cmdwin()
+        " If cpoptions contains 'x', <ESC> in cmdline executes the input,
+        " otherwise throws away the input.
+        " (For more information, see :h c_ESC and :h E199)
+        if stridx(&cpoptions, 'x') == -1
+          let l:exit_key = "\<Cmd>quit\<CR>"
+          if mode() ==# 'i'
+            let l:exit_key = "\<ESC>" . l:exit_key
+          endif
+        else
+          let l:exit_key = "\<CR>"
+        endif
+      endif
+
+      if has_key(l:opts, '_on_auto_accept') && l:opts._on_auto_accept
+        let l:exit_key = "\<C-h>" .. l:exit_key
+      endif
+
       let l:keys = ''
-      let l:keys .= printf("\<Esc>\<Cmd>call cursor(%s, %s)\<CR>", l:match.lnum, l:match.col)
+      let l:keys .= printf("%s\<Cmd>call cursor(%s, %s)\<CR>", l:exit_key, l:match.lnum, l:match.col)
       let l:keys .= get(l:opts, 'nohlsearch', v:false) ? "\<Cmd>nohlsearch\<CR>" : ''
       call feedkeys(l:keys, 'nit')
     endif
-  end
+  endif
   call seak#clear()
 endfunction
 
@@ -160,7 +191,7 @@ endif
 "
 if has('nvim')
   function! s:open(lnum, col, mark) abort
-    return nvim_buf_set_extmark(0, s:ns, a:lnum - 1, max([0, a:col - 2]), {
+    return nvim_buf_set_extmark(s:get_current_bufnr(), s:ns, a:lnum - 1, max([0, a:col - 2]), {
     \   'end_line': a:lnum - 1,
     \   'end_col': max([0, a:col - 2]),
     \   'virt_text': [[a:mark, 'SeakChar']],
@@ -170,12 +201,17 @@ if has('nvim')
 else
   function! s:open(lnum, col, mark) abort
     let s:text_prop_id += 1
-    call prop_add(a:lnum, a:col, { 'type': 'seak', 'id': s:text_prop_id })
+    call prop_add(a:lnum, a:col, {
+    \   'type': 'seak',
+    \   'id': s:text_prop_id,
+    \   'bufnr': s:get_current_bufnr(),
+    \ })
     call popup_create(a:mark, {
     \   'line': -1,
     \   'col': -1,
     \   'textprop': 'seak',
     \   'textpropid': s:text_prop_id,
+    \   'textpropwin': s:get_current_winID(),
     \   'width': 1,
     \   'height': 1,
     \   'highlight': 'SeakChar'
@@ -189,14 +225,86 @@ endif
 "
 if has('nvim')
   function! s:close(id) abort
-    call nvim_buf_del_extmark(0, s:ns, a:id)
+    call nvim_buf_del_extmark(s:get_current_bufnr(), s:ns, a:id)
   endfunction
 else
   function! s:close(id) abort
     call prop_remove({
     \   'type': 'seak',
     \   'id': a:id,
+    \   'bufnr': s:get_current_bufnr(),
     \ })
   endfunction
 endif
 
+"
+" s:getcmdline
+"
+" Similar to the built-in getcmdline(), but cooperate with cmdwin.
+"
+function! s:getcmdline() abort
+  if s:is_in_cmdwin()
+    return getline('.')
+  else
+    return getcmdline()
+  endif
+endfunction
+
+"
+" s:getcmdtype
+"
+" Similar to the built-in getcmdtype(), but cooperate with cmdwin.
+"
+function! s:getcmdtype() abort
+  let l:cmdtype = getcmdtype()
+  if l:cmdtype !=# ''
+    return l:cmdtype
+  else
+    return getcmdwintype()
+  endif
+endfunction
+
+"
+" s:is_in_cmdwin
+"
+function! s:is_in_cmdwin() abort
+  return getcmdwintype() !=# '' && getcmdtype() ==# ''
+endfunction
+
+"
+" s:get_current_bufnr
+"
+function! s:get_current_bufnr() abort
+  if s:is_in_cmdwin()
+    return bufnr('#')
+  endif
+  return bufnr('%')
+endfunction
+
+"
+" s:get_current_bufline
+"
+function! s:get_current_bufline(lnum, ...) abort
+  return call('getbufline', [s:get_current_bufnr(), a:lnum] + a:000)
+endfunction
+
+"
+" s:get_current_winID
+"
+function! s:get_current_winID() abort
+  return bufwinid(s:get_current_bufnr())
+endfunction
+
+"
+" s:getcurpos_on_current_window
+"
+if has('nvim')
+  function! s:getcurpos_on_current_window() abort
+    let l:cursor = nvim_win_get_cursor(s:get_current_winID())
+    return [0, l:cursor[0], l:cursor[1] + 1]
+  endfunction
+else
+  function! s:getcurpos_on_current_window() abort
+    return getcurpos(s:get_current_winID())
+  endfunction
+endif
