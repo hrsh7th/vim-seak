@@ -5,7 +5,7 @@ let g:loaded_seak = v:true
 
 let g:seak_enabled = get(g:, 'seak_enabled', v:false)
 let g:seak_marks = get(g:, 'seak_marks', split('asdfhjkl', '.\zs'))
-let g:seak_auto_accept = get(g:, 'seak_auto_accept', v:true)
+let g:seak_auto_accept = get(g:, 'seak_auto_accept', v:false)
 
 if !hlexists('SeakChar')
   highlight! default SeakChar
