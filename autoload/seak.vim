@@ -5,6 +5,20 @@ let s:state = {
 \ }
 
 "
+" seak#on_enter
+"
+function! seak#on_enter() abort
+  call seak#on_change()
+endfunction
+
+"
+" seak#on_leave
+"
+function! seak#on_leave() abort
+  call seak#clear()
+endfunction
+
+"
 " seak#on_change
 "
 function! seak#on_change() abort
@@ -65,6 +79,7 @@ function! seak#on_change() abort
     let s:state.matches = l:matches
     let s:state.search = matchadd('Search', l:input)
     let s:state.incsearch = empty(l:nextmatch) ? 0 : matchaddpos('IncSearch', [[l:nextmatch.lnum, l:nextmatch.col, l:nextmatch.end_col - l:nextmatch.col]])
+
     redraw
   catch /.*/
     echomsg string({ 'exception': v:exception, 'throwpoint': v:throwpoint })
