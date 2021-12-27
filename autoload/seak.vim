@@ -96,7 +96,7 @@ function! seak#clear() abort
     call matchdelete(s:state.incsearch)
   catch /.*/
   endtry
-  let s:state.search = 0
+  let s:state.incsearch = 0
 endfunction
 
 "
