@@ -105,9 +105,9 @@ endif
 "
 function! s:open(lnum, col, mark) abort
   if has('nvim')
-    return nvim_buf_set_extmark(0, s:ns, a:lnum - 1, a:col - 1, {
+    return nvim_buf_set_extmark(0, s:ns, a:lnum - 1, max([0, a:col - 2]), {
     \   'end_line': a:lnum - 1,
-    \   'end_col': a:col - 1,
+    \   'end_col': max([0, a:col - 2]),
     \   'virt_text': [[a:mark, 'SeakChar']],
     \   'virt_text_pos': 'overlay'
     \ })
@@ -116,6 +116,7 @@ function! s:open(lnum, col, mark) abort
     call prop_add(a:lnum, a:col, { 'type': 'seak', 'id': s:text_prop_id })
     call popup_create(a:mark, {
     \   'line': -1,
+    \   'col': -1,
     \   'textprop': 'seak',
     \   'textpropid': s:text_prop_id,
     \   'width': 1,
