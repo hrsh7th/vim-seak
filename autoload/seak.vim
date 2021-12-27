@@ -91,6 +91,7 @@ function! seak#select(...) abort
     endif
   end
   call seak#clear()
+  redraw
 endfunction
 
 if has('nvim')
