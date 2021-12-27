@@ -37,9 +37,11 @@ function! seak#on_change() abort
     let l:mark = l:input[strlen(l:input) - 1]
     if index(g:seak_marks, l:mark) >= 0
       let l:option = g:seak_auto_accept
-      if type(l:option) == v:t_bool
+      if l:option is v:true
         let l:option = { 'nohlsearch': v:true, 'jumplist': v:true }
       endif
+      let l:option = deepcopy(l:option)
+      let l:option.mark = l:mark
       call seak#select(l:option)
       return
     endif
