@@ -33,10 +33,14 @@ function! seak#on_change() abort
   let l:curpos = getcurpos()
   let l:next = getcmdtype() ==# '/'
 
-  if get(g:, 'seak_auto_accept', v:true)
+  if !empty(get(g:, 'seak_auto_accept', v:true))
     let l:mark = l:input[strlen(l:input) - 1]
     if index(g:seak_marks, l:mark) >= 0
-      call seak#select({ 'nohlsearch': v:true, 'mark': l:mark })
+      let l:option = g:seak_auto_accept
+      if type(l:option) == v:t_bool
+        let l:option = { 'nohlsearch': v:true, 'jumplist': v:true }
+      endif
+      call seak#select(l:option)
       return
     endif
   endif
@@ -126,6 +130,9 @@ function! seak#select(...) abort
   if l:index >= 0
     let l:match = get(s:state.matches, l:index, v:null)
     if !empty(l:match)
+      if get(l:opts, 'jumplist', v:false)
+        normal! m'
+      endif
       let l:match = s:state.matches[l:index]
       let l:keys = ''
       let l:keys .= printf("\<Esc>\<Cmd>call cursor(%s, %s)\<CR>", l:match.lnum, l:match.col)

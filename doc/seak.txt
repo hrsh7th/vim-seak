@@ -44,6 +44,8 @@ seak#select(option)~
 
     - `nohlsearch` (boolean)
       - Specify clear the search highlight after jump to mark via |vim-seak|.
+    - `jumplist` (boolean)
+      - Specify to make new jumplist entry or not.
 
 
 
@@ -62,11 +64,11 @@ g:seak_auto_accept~
 
   Specify `auto accept` or not.
   This option is useful to achive sticky marks.
-
 >
     let g:seak_marks = split('ABCDEFGHIJKLMNOPQRSTUVWXYZ', '.\zs')
     let g:seak_auto_accept = v:true
 <
+  You can specify the |seak#select| argument for this option.
 
                                                                   *g:seak_marks*
 g:seak_marks~
