@@ -130,7 +130,7 @@ function! seak#select(...) abort
   if l:index >= 0
     let l:match = get(s:state.matches, l:index, v:null)
     if !empty(l:match)
-      if get(l:opts, 'jumplist', v:false)
+      if get(l:opts, 'jumplist', v:true)
         normal! m'
       endif
       let l:match = s:state.matches[l:index]
